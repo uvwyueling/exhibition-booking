@@ -286,7 +286,7 @@
     </div>
     <div class="rowbtns" style="margin-top:18px">
       <button class="btn ghost" onclick="show(2)">上一步</button>
-      <button class="btn" onclick="submitForm()">提交预约</button>
+      <button class="btn" id="submitBtn" onclick="submitForm()">提交预约</button>
     </div>
   </section>
 
@@ -337,6 +337,9 @@
    配置区 —— 接后台前，唯一要改的地方都在这里
    ============================================================ */
 const CONFIG = {
+  // 接后台开关：false=用下方 MOCK 假数据（本地演示）；true=调 /api 真接口（EdgeOne 部署+飞书就绪后改 true）
+  useBackend: false,
+  apiBase: "",                     // 同源部署留空即可；本地联调可填完整域名
   autoApproveMaxDays: 10,          // ≤ 此天数自助确认；> 此天数转人工审核
   venues: ["展厅", "15号楼一楼走廊", "16号楼一楼走廊", "学院一楼花园中庭"],
   venueHints: {
@@ -380,19 +383,32 @@ function fmtShort(d){ return `${d.getMonth()+1}月${d.getDate()}日`; }
 function inclusiveDays(a,b){ return Math.round((key2date(key(b))-key2date(key(a)))/DAYMS)+1; }
 function key2date(k){ const y=Math.floor(k/10000), m=Math.floor(k/100)%100, dd=k%100; return new Date(y,m-1,dd).getTime(); }
 
-/* 计算某天在当前场地的状态 */
+/* 计算某天在当前场地的状态（读 STATE.ranges，键为 YYYYMMDD） */
 function statusOf(d){
-  if(key(d) < key(TODAY)) return "past";
-  const ranges = MOCK[STATE.venue] || [];
-  for(const r of ranges){
-    const rs=key(addDays(TODAY,r.s)), re=key(addDays(TODAY,r.e));
-    if(key(d)>=rs && key(d)<=re) return r.st;
+  const kd = key(d);
+  if(kd < key(TODAY)) return "past";
+  for(const r of STATE.ranges){
+    if(kd>=r.s && kd<=r.e) return r.st;
   }
   return "free";
 }
 
+/* 读取某场地的占用档期 → [{s:keyInt, e:keyInt, st:"booked"|"review"}] */
+async function loadVenueRanges(v){
+  if(CONFIG.useBackend){
+    const res = await fetch(`${CONFIG.apiBase}/api/availability?venue=${encodeURIComponent(v)}`);
+    const j = await res.json();
+    if(!j.ok) throw new Error(j.error || "读取失败");
+    return (j.ranges||[]).map(r=>({ s:isoToKey(r.start), e:isoToKey(r.end), st:r.status }));
+  }
+  // 本地演示：MOCK 的相对偏移换算成真实日期键
+  return (MOCK[v]||[]).map(r=>({ s:key(addDays(TODAY,r.s)), e:key(addDays(TODAY,r.e)), st:r.st }));
+}
+function isoToKey(s){ const [y,m,d]=s.split("-").map(Number); return y*10000+m*100+d; }
+function dateToISO(d){ const p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
+
 /* ---------- 应用状态 ---------- */
-const STATE = { venue:null, start:null, end:null };
+const STATE = { venue:null, start:null, end:null, ranges:[], resultStatus:null };
 
 /* ---------- 渲染：场地卡 ---------- */
 function renderVenues(){
@@ -542,12 +558,20 @@ function show(step){
   });
   window.scrollTo({top:0, behavior:"smooth"});
 }
-function pickVenue(v){
-  STATE.venue=v; STATE.start=null; STATE.end=null;
+async function pickVenue(v){
+  STATE.venue=v; STATE.start=null; STATE.end=null; STATE.resultStatus=null;
   document.getElementById("calVenueName").textContent=v;
   const thumb=document.getElementById("calThumb"), url=CONFIG.venueImages[v];
   thumb.innerHTML = url ? `<img src="${url}" alt="${v}">` : "照片";
-  renderCalendars(); updateReadout(); show(2);
+  show(2);
+  const host=document.getElementById("cals");
+  host.innerHTML = `<div style="padding:44px 12px;text-align:center;color:var(--soft);font-size:14px">正在读取「${v}」的档期…</div>`;
+  try{
+    STATE.ranges = await loadVenueRanges(v);
+    renderCalendars(); updateReadout();
+  }catch(err){
+    host.innerHTML = `<div style="padding:36px 12px;text-align:center;color:var(--booked-ink);font-size:14px">读取档期失败：${err.message||err}<br><br><button class="btn small" onclick="pickVenue('${v}')">重试</button></div>`;
+  }
 }
 function goVenue(){ show(1); }
 function goForm(){
@@ -557,7 +581,7 @@ function goForm(){
 }
 
 /* ---------- 表单校验 ---------- */
-function submitForm(){
+async function submitForm(){
   const checks = [
     ["f_title","i_title", v=>v.trim().length>0],
     ["f_class","i_class", v=>v.trim().length>0],
@@ -568,21 +592,60 @@ function submitForm(){
   ];
   let ok=true, firstBad=null;
   checks.forEach(([fid,iid,test])=>{
-    const val=document.getElementById(iid).value;
-    const good=test(val);
+    const value=document.getElementById(iid).value;
+    const good=test(value);
     document.getElementById(fid).classList.toggle("bad", !good);
-    if(!good && !firstBad){ firstBad=document.getElementById(iid); ok=false; }
+    if(!good && !firstBad){ firstBad=document.getElementById(iid); }
     if(!good) ok=false;
   });
   if(!ok){ if(firstBad) firstBad.focus(); return; }
-  buildConfirmation();
-  show(4);
+
+  // 本地演示模式：不提交，直接按天数判断展示确认页
+  if(!CONFIG.useBackend){ buildConfirmation(); show(4); return; }
+
+  // 真实模式：提交到 /api/book
+  const btn=document.getElementById("submitBtn"); const old=btn.textContent;
+  btn.disabled=true; btn.textContent="提交中…";
+  try{
+    const res = await fetch(`${CONFIG.apiBase}/api/book`, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        venue: STATE.venue,
+        start: dateToISO(STATE.start),
+        end:   dateToISO(STATE.end),
+        exhibitionName: fieldVal("i_title"),
+        className:      fieldVal("i_class"),
+        contactName:    fieldVal("i_name"),
+        phone:          fieldVal("i_phone"),
+        email:          fieldVal("i_email"),
+        teacher:        fieldVal("i_teacher"),
+      }),
+    });
+    const j = await res.json().catch(()=>({ok:false,error:"返回格式错误"}));
+    if(res.status===409 && j.conflict){          // 被别人抢先了
+      openModal(j.conflict);
+      STATE.start=null; STATE.end=null; show(2);
+      try{ STATE.ranges = await loadVenueRanges(STATE.venue); renderCalendars(); updateReadout(); }catch(e){}
+      return;
+    }
+    if(!j.ok){ alert("提交失败：" + (j.error||"未知错误")); return; }
+    buildConfirmation(j.status);                 // "已确认" | "审核中"
+    show(4);
+  }catch(err){
+    alert("网络错误，请重试：" + (err.message||err));
+  }finally{
+    btn.disabled=false; btn.textContent=old;
+  }
 }
+function fieldVal(id){ return document.getElementById(id).value.trim(); }
 
 /* ---------- 生成确认页（展签） ---------- */
-function buildConfirmation(){
+function buildConfirmation(statusOverride){
   const n = inclusiveDays(STATE.start, STATE.end);
-  const isAuto = n <= CONFIG.autoApproveMaxDays;
+  const isAuto = (statusOverride==="已确认" || statusOverride==="审核中")
+    ? (statusOverride==="已确认")
+    : (n <= CONFIG.autoApproveMaxDays);
   const data = {
     展览名称: document.getElementById("i_title").value.trim(),
     班级: document.getElementById("i_class").value.trim(),
