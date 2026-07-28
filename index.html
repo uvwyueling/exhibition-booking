@@ -303,11 +303,11 @@
       <div class="poster" id="cPoster">
         <h4>下一步：设计展览海报</h4>
         <ul>
-          <li><b>尺寸</b><span class="todo" id="p_size"></span></li>
-          <li><b>分辨率</b><span class="todo" id="p_dpi"></span></li>
+          <li><b>尺寸</b><span id="p_size"></span></li>
+          <li><b>分辨率</b><span id="p_dpi"></span></li>
           <li><b>格式</b><span id="p_fmt"></span></li>
-          <li><b>大小</b><span class="todo" id="p_max"></span></li>
-          <li><b>发送至</b><span class="todo" id="p_email"></span></li>
+          <li><b>大小</b><span id="p_max"></span></li>
+          <li><b>发送至</b><span id="p_email"></span></li>
         </ul>
         <p style="font-size:12.5px;margin-top:10px;color:#6f5a1e">请在展览开始前把符合要求的海报文件发送到上述邮箱，我们会导入大厅广告机。</p>
       </div>
@@ -341,8 +341,8 @@ const CONFIG = {
   venues: ["展厅", "15号楼一楼走廊", "16号楼一楼走廊", "学院一楼花园中庭"],
   venueHints: {
     "展厅": "学院大展厅，空间最大",
-    "15号楼一楼走廊": "15 号楼一楼，靠……（可补充位置）",
-    "16号楼一楼走廊": "16 号楼一楼，靠……（可补充位置）",
+    "15号楼一楼走廊": "15 号楼一楼走廊",
+    "16号楼一楼走廊": "16 号楼一楼走廊",
     "学院一楼花园中庭": "学院一楼花园中庭，开放式空间"
   },
   // 两张图：展厅一张；三处走廊/中庭共用一张“圈注图”。拍好后把 URL 填进来即可。
@@ -354,11 +354,11 @@ const CONFIG = {
   },
   // 海报导出要求 + 收件邮箱 —— 待你确认后替换（现在是占位）
   poster: {
-    size: "竖版 ____ × ____ px（待确认）",
-    dpi:  "____ dpi（待确认）",
-    format: "JPG / PNG",
-    maxSize: "≤ ____ MB（待确认）",
-    email: "your-email@example.com（待替换为你的邮箱）"
+    size: "竖版 2160 × 3840 px",
+    dpi:  "900 dpi",
+    format: "PNG",
+    maxSize: "暂无限制（发 PNG 原图即可）",
+    email: "03024@huznu.edu.cn"
   }
 };
 
