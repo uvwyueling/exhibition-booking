@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>艺术学院展厅预约（原型）</title>
+<style>
+  /* ============================================================
+     可视觉配置 —— 后续接后台时，这些是唯一需要你/我改动的地方
+     ============================================================ */
+  :root{
+    --paper:#F3F4F1; --card:#FFFFFF; --ink:#1B1C1A; --soft:#65675F; --faint:#9A9B93; --line:#E4E5DF;
+    --accent:#374A6B; --accent-press:#2A3A56; --accent-tint:#DEE3EE; --accent-ink:#2A3A56;
+    --free-bg:#E8F1EA; --free-dot:#4E8C6A; --free-ink:#2C5B41;
+    --booked-bg:#F6DBD6; --booked-dot:#C05951; --booked-ink:#8C352E;
+    --review-bg:#F6E7BE; --review-dot:#C6941F; --review-ink:#7A590C;
+    --radius:12px;
+    --serif:"Songti SC","STSong","SimSun","Source Han Serif SC",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+    --mono:"SFMono-Regular","SF Mono",Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.6;
+    font-size:16px;-webkit-font-smoothing:antialiased;padding:0 0 64px}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px}
+
+  /* header */
+  header{padding:28px 0 18px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--faint);margin-bottom:6px}
+  .title{font-family:var(--serif);font-size:30px;font-weight:600;letter-spacing:.02em}
+  .demo-tag{display:inline-block;margin-top:10px;font-family:var(--mono);font-size:11px;
+    color:var(--soft);background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 11px}
+
+  /* stepper — 真实的顺序步骤，故用编号 */
+  .stepper{display:flex;flex-wrap:wrap;gap:6px 18px;margin:18px 0 4px;padding-bottom:18px;
+    border-bottom:1px solid var(--line)}
+  .step{font-family:var(--mono);font-size:12px;color:var(--faint);display:flex;align-items:center;gap:7px}
+  .step .num{width:20px;height:20px;border-radius:50%;border:1px solid var(--line);
+    display:grid;place-items:center;font-size:11px;color:var(--faint);background:#fff}
+  .step.active{color:var(--ink)} .step.active .num{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .step.done .num{background:#fff;color:var(--accent);border-color:var(--accent)}
+  .step.done{color:var(--soft)}
+
+  /* screens */
+  .screen{display:none;padding-top:26px}
+  .screen.on{display:block}
+  @media (prefers-reduced-motion:no-preference){
+    .screen.on{animation:fade .32s ease}
+    @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  }
+  .lead{font-family:var(--serif);font-size:21px;font-weight:600;margin-bottom:4px}
+  .sub{color:var(--soft);font-size:14px;margin-bottom:22px}
+
+  /* venue cards */
+  .venues{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  .vcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;cursor:pointer;text-align:left;transition:border-color .15s,transform .15s;
+    display:flex;flex-direction:column;color:inherit;font-family:inherit}
+  .vcard:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .vcard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .vphoto{aspect-ratio:16/10;background:#EDEEE9;display:grid;place-items:center;
+    border-bottom:1px solid var(--line);position:relative}
+  .vphoto img{width:100%;height:100%;object-fit:cover;display:block}
+  .vphoto .ph{font-family:var(--mono);font-size:11px;color:var(--faint);text-align:center;padding:0 14px;line-height:1.7}
+  .vbody{padding:14px 16px 16px}
+  .vname{font-family:var(--serif);font-size:19px;font-weight:600}
+  .vhint{color:var(--soft);font-size:12.5px;margin-top:3px}
+
+  /* selected venue banner on calendar screen */
+  .vbar{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:12px 14px;margin-bottom:18px}
+  .vbar .thumb{width:56px;height:44px;border-radius:8px;background:#EDEEE9;flex:0 0 auto;overflow:hidden;
+    display:grid;place-items:center;font-family:var(--mono);font-size:9px;color:var(--faint)}
+  .vbar .thumb img{width:100%;height:100%;object-fit:cover}
+  .vbar .vn{font-family:var(--serif);font-size:18px;font-weight:600}
+  .vbar .vc{font-size:12px;color:var(--soft)}
+
+  /* notice line */
+  .note{background:#FBF6E9;border:1px solid #EAD9A8;border-radius:10px;padding:10px 13px;
+    font-size:13px;color:#6f5a1e;margin-bottom:18px;display:flex;gap:8px}
+  .note::before{content:"提示";font-family:var(--mono);font-size:10px;letter-spacing:.05em;
+    background:#EAD9A8;color:#6f5a1e;border-radius:5px;padding:2px 6px;height:fit-content;flex:0 0 auto}
+
+  /* legend */
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:16px;font-family:var(--mono);font-size:12px;color:var(--soft)}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .dot.free{background:var(--free-bg);border:1px solid var(--free-dot)}
+  .dot.booked{background:var(--booked-bg);border:1px solid var(--booked-dot)}
+  .dot.review{background:var(--review-bg);border:1px solid var(--review-dot)}
+  .dot.sel{background:var(--accent)}
+
+  /* calendars */
+  .cals{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:760px){.cals{grid-template-columns:1fr;max-width:340px;margin:0 auto}}
+  .cal{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+  .cal h3{font-family:var(--serif);font-size:16px;font-weight:600;text-align:center;margin-bottom:10px}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .wd{font-family:var(--mono);font-size:11px;color:var(--faint);text-align:center;padding:2px 0}
+  .day{aspect-ratio:1;border:1px solid transparent;border-radius:7px;display:grid;place-items:center;
+    font-size:13px;font-variant-numeric:tabular-nums;cursor:default;position:relative;user-select:none}
+  .day.pad{visibility:hidden}
+  .day.past{color:#C7C8C2}
+  .day.free{background:var(--free-bg);border-color:#D3E5D8;color:var(--free-ink);cursor:pointer}
+  .day.free:hover{border-color:var(--free-dot)}
+  .day.booked{background:var(--booked-bg);border-color:#EDCAC4;color:var(--booked-ink);cursor:not-allowed}
+  .day.review{background:var(--review-bg);border-color:#EAD59A;color:var(--review-ink);cursor:not-allowed}
+  .day.sel-edge{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+  .day.sel-mid{background:var(--accent-tint);color:var(--accent-ink);border-color:var(--accent-tint)}
+  .day:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+  /* selection readout / actions */
+  .readout{margin-top:20px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px;display:flex;flex-wrap:wrap;align-items:center;gap:14px;justify-content:space-between}
+  .readout .rl{font-size:14px;color:var(--soft)}
+  .readout .rv{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink)}
+  .readout .days{font-family:var(--mono);font-size:12px;color:var(--soft);margin-left:8px}
+  .flag{font-family:var(--mono);font-size:11px;border-radius:6px;padding:3px 8px;margin-left:6px}
+  .flag.auto{background:var(--free-bg);color:var(--free-ink)}
+  .flag.manual{background:var(--review-bg);color:var(--review-ink)}
+
+  /* buttons */
+  .btn{font-family:var(--sans);font-size:15px;font-weight:500;border-radius:10px;padding:11px 22px;
+    border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;transition:background .15s}
+  .btn:hover{background:var(--accent-press)}
+  .btn:disabled{background:#C9CDBF;border-color:#C9CDBF;color:#fff;cursor:not-allowed}
+  .btn.ghost{background:transparent;color:var(--accent)}
+  .btn.ghost:hover{background:var(--accent-tint)}
+  .btn.small{font-size:13px;padding:8px 15px}
+  .btn:focus-visible{outline:2px solid var(--accent-press);outline-offset:2px}
+  .rowbtns{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+  /* form */
+  .initbar{background:var(--accent-tint);border:1px solid #C4CDDF;border-radius:10px;padding:12px 14px;
+    font-size:14px;color:var(--accent-ink);margin-bottom:22px}
+  .initbar b{font-family:var(--serif)}
+  .form{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+  .field{margin-bottom:18px}
+  .field:last-of-type{margin-bottom:0}
+  .field label{display:block;font-size:13.5px;color:var(--soft);margin-bottom:6px}
+  .field label .req{color:var(--booked-dot)}
+  .field input{width:100%;font-family:var(--sans);font-size:15px;color:var(--ink);background:#FCFCFB;
+    border:1px solid var(--line);border-radius:9px;padding:11px 13px;transition:border-color .15s}
+  .field input:focus{outline:none;border-color:var(--accent)}
+  .field.bad input{border-color:var(--booked-dot);background:#FEF7F6}
+  .field .err{display:none;color:var(--booked-ink);font-size:12px;margin-top:5px}
+  .field.bad .err{display:block}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+  @media(max-width:560px){.grid2{grid-template-columns:1fr}}
+
+  /* confirmation — 做成一张展签 */
+  .label{background:var(--card);border:1px solid var(--ink);border-radius:4px;padding:0;overflow:hidden;
+    max-width:560px;margin:0 auto}
+  .label .top{padding:22px 26px 18px;border-bottom:1px dashed var(--line)}
+  .label .status{display:flex;align-items:center;gap:11px;font-family:var(--serif);font-size:23px;font-weight:600}
+  .label .status .ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;
+    color:#fff;font-size:18px;flex:0 0 auto}
+  .status.ok .ic{background:var(--free-dot)} .status.wait .ic{background:var(--review-dot)}
+  .label .statusmsg{font-size:14px;color:var(--soft);margin-top:8px;padding-left:45px}
+  .label .body{padding:20px 26px}
+  .kv{display:grid;grid-template-columns:88px 1fr;gap:9px 14px;font-size:14.5px}
+  .kv dt{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.03em;padding-top:2px;text-transform:uppercase}
+  .kv dd{color:var(--ink)}
+  .kv dd.big{font-family:var(--serif);font-size:16px}
+  .poster{margin:20px 26px 4px;background:#FBF6E9;border:1px solid #EAD9A8;border-radius:10px;padding:15px 16px}
+  .poster h4{font-family:var(--serif);font-size:15px;font-weight:600;margin-bottom:9px;color:#6f5a1e}
+  .poster ul{list-style:none;font-size:13.5px;color:#6f5a1e;display:grid;gap:5px}
+  .poster ul li b{font-family:var(--mono);font-size:11px;color:#8a7128;margin-right:6px;letter-spacing:.03em}
+  .poster .todo{color:#b0472e;font-weight:500}
+  .label .foot{padding:16px 26px 24px;text-align:center}
+
+  .hidden{display:none!important}
+
+  /* modal */
+  .backdrop{position:fixed;inset:0;background:rgba(24,24,22,.42);display:none;place-items:center;padding:24px;z-index:50}
+  .backdrop.on{display:grid}
+  .modal{background:#fff;border-radius:var(--radius);max-width:380px;width:100%;padding:24px;text-align:center;
+    box-shadow:0 12px 40px rgba(0,0,0,.18)}
+  .modal .mic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;margin:0 auto 14px;font-size:22px}
+  .modal.booked .mic{background:var(--booked-bg);color:var(--booked-ink)}
+  .modal.review .mic{background:var(--review-bg);color:var(--review-ink)}
+  .modal h4{font-family:var(--serif);font-size:18px;font-weight:600;margin-bottom:7px}
+  .modal p{font-size:14px;color:var(--soft);margin-bottom:18px}
+
+  footer{margin-top:40px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--faint);line-height:1.9}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Exhibition Schedule · 湖州师范学院艺术学院</div>
+    <div class="title">艺术学院展厅预约</div>
+    <div class="demo-tag">原型演示 · 档期为模拟数据 · 未接后台</div>
+  </header>
+
+  <nav class="stepper" id="stepper">
+    <div class="step" data-step="1"><span class="num">1</span>选场地</div>
+    <div class="step" data-step="2"><span class="num">2</span>选档期</div>
+    <div class="step" data-step="3"><span class="num">3</span>填信息</div>
+    <div class="step" data-step="4"><span class="num">4</span>完成</div>
+  </nav>
+
+  <!-- ========== 1 选场地 ========== -->
+  <section class="screen" id="s1">
+    <div class="lead">你想在哪个场地办展览？</div>
+    <div class="sub">四个场地各自独立预约。走廊两处和中庭离得很近，看同一张标注图别选错了。</div>
+    <div class="venues" id="venueGrid"></div>
+  </section>
+
+  <!-- ========== 2 选档期 ========== -->
+  <section class="screen" id="s2">
+    <div class="vbar">
+      <div class="thumb" id="calThumb">照片</div>
+      <div>
+        <div class="vn" id="calVenueName">—</div>
+        <div class="vc">在下方绿色（可约）日期里，先点开始日、再点结束日</div>
+      </div>
+      <div style="margin-left:auto"><button class="btn ghost small" onclick="goVenue()">换场地</button></div>
+    </div>
+
+    <div class="note">建议单次展期在一周左右，请勿长期占用场地。第一天默认为布展日、最后一天为撤展日；需要留空隙，自己在日历上空出即可。</div>
+
+    <div class="legend">
+      <span><i class="dot free"></i>可约</span>
+      <span><i class="dot booked"></i>已被预约</span>
+      <span><i class="dot review"></i>审核中</span>
+      <span><i class="dot sel"></i>你的选择</span>
+    </div>
+
+    <div class="cals" id="cals"></div>
+
+    <div class="readout">
+      <div>
+        <span class="rl">已选档期：</span>
+        <span class="rv" id="rangeText">尚未选择</span>
+        <span class="days" id="daysText"></span>
+        <span id="routeFlag"></span>
+      </div>
+      <div class="rowbtns">
+        <button class="btn ghost small" id="resetBtn" onclick="resetRange()" disabled>重新选择</button>
+        <button class="btn" id="toFormBtn" onclick="goForm()" disabled>下一步：填信息</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 3 填信息 ========== -->
+  <section class="screen" id="s3">
+    <div class="initbar" id="initBar"></div>
+    <div class="lead">完善联系人信息</div>
+    <div class="sub">这些信息将用于生成《展厅使用登记表》并与你联系，请如实填写。</div>
+    <div class="form">
+      <div class="field" id="f_title">
+        <label>展览名称 <span class="req">*</span></label>
+        <input id="i_title" type="text" placeholder="例：2026 届视觉传达毕业设计展" autocomplete="off">
+        <div class="err">请填写展览名称</div>
+      </div>
+      <div class="grid2">
+        <div class="field" id="f_class">
+          <label>班级 <span class="req">*</span></label>
+          <input id="i_class" type="text" placeholder="例：视觉2201" autocomplete="off">
+          <div class="err">请填写班级</div>
+        </div>
+        <div class="field" id="f_teacher">
+          <label>指导教师 <span class="req">*</span></label>
+          <input id="i_teacher" type="text" placeholder="例：张老师" autocomplete="off">
+          <div class="err">请填写指导教师</div>
+        </div>
+        <div class="field" id="f_name">
+          <label>联系人姓名 <span class="req">*</span></label>
+          <input id="i_name" type="text" placeholder="通常是班长" autocomplete="off">
+          <div class="err">请填写联系人姓名</div>
+        </div>
+        <div class="field" id="f_phone">
+          <label>联系电话 <span class="req">*</span></label>
+          <input id="i_phone" type="tel" placeholder="11 位手机号" autocomplete="off" inputmode="numeric">
+          <div class="err">请填写有效的电话号码</div>
+        </div>
+      </div>
+      <div class="field" id="f_email">
+        <label>邮箱地址 <span class="req">*</span></label>
+        <input id="i_email" type="email" placeholder="用于接收《布展申请表》，请确保常用" autocomplete="off">
+        <div class="err">请填写有效的邮箱地址</div>
+      </div>
+    </div>
+    <div class="rowbtns" style="margin-top:18px">
+      <button class="btn ghost" onclick="show(2)">上一步</button>
+      <button class="btn" onclick="submitForm()">提交预约</button>
+    </div>
+  </section>
+
+  <!-- ========== 4 完成 ========== -->
+  <section class="screen" id="s4">
+    <div class="label">
+      <div class="top">
+        <div class="status" id="cStatus"><span class="ic" id="cIc"></span><span id="cTitle"></span></div>
+        <div class="statusmsg" id="cMsg"></div>
+      </div>
+      <div class="body">
+        <dl class="kv" id="cKv"></dl>
+      </div>
+      <div class="poster" id="cPoster">
+        <h4>下一步：设计展览海报</h4>
+        <ul>
+          <li><b>尺寸</b><span class="todo" id="p_size"></span></li>
+          <li><b>分辨率</b><span class="todo" id="p_dpi"></span></li>
+          <li><b>格式</b><span id="p_fmt"></span></li>
+          <li><b>大小</b><span class="todo" id="p_max"></span></li>
+          <li><b>发送至</b><span class="todo" id="p_email"></span></li>
+        </ul>
+        <p style="font-size:12.5px;margin-top:10px;color:#6f5a1e">请在展览开始前把符合要求的海报文件发送到上述邮箱，我们会导入大厅广告机。</p>
+      </div>
+      <div class="foot">
+        <button class="btn ghost small" onclick="restart()">再预约一场</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    此页面为交互原型，用于确认流程与界面。<br>档期、提交结果均为本地模拟，不会真正写入任何系统或发送邮件。
+  </footer>
+</div>
+
+<!-- 冲突弹窗 -->
+<div class="backdrop" id="backdrop" onclick="closeModal(event)">
+  <div class="modal" id="modalBox">
+    <div class="mic" id="mIc"></div>
+    <h4 id="mTitle"></h4>
+    <p id="mText"></p>
+    <button class="btn small" onclick="closeModal()">知道了</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   配置区 —— 接后台前，唯一要改的地方都在这里
+   ============================================================ */
+const CONFIG = {
+  autoApproveMaxDays: 10,          // ≤ 此天数自助确认；> 此天数转人工审核
+  venues: ["展厅", "15号楼一楼走廊", "16号楼一楼走廊", "学院一楼花园中庭"],
+  venueHints: {
+    "展厅": "学院大展厅，空间最大",
+    "15号楼一楼走廊": "15 号楼一楼，靠……（可补充位置）",
+    "16号楼一楼走廊": "16 号楼一楼，靠……（可补充位置）",
+    "学院一楼花园中庭": "学院一楼花园中庭，开放式空间"
+  },
+  // 两张图：展厅一张；三处走廊/中庭共用一张“圈注图”。拍好后把 URL 填进来即可。
+  venueImages: {
+    "展厅": "",                    // ← 展厅照片 URL
+    "15号楼一楼走廊": "",           // ← 三处共用的“圈注图”URL（下同）
+    "16号楼一楼走廊": "",
+    "学院一楼花园中庭": ""
+  },
+  // 海报导出要求 + 收件邮箱 —— 待你确认后替换（现在是占位）
+  poster: {
+    size: "竖版 ____ × ____ px（待确认）",
+    dpi:  "____ dpi（待确认）",
+    format: "JPG / PNG",
+    maxSize: "≤ ____ MB（待确认）",
+    email: "your-email@example.com（待替换为你的邮箱）"
+  }
+};
+
+/* 模拟档期：真实版这些会从飞书按“场地”读出来。offset = 相对今天的天数 */
+const MOCK = {
+  "展厅":            [ {s:2,e:8,st:"booked"}, {s:18,e:31,st:"review"}, {s:41,e:47,st:"booked"} ],
+  "15号楼一楼走廊":  [ {s:5,e:10,st:"booked"}, {s:25,e:29,st:"booked"} ],
+  "16号楼一楼走廊":  [ {s:12,e:15,st:"booked"}, {s:52,e:66,st:"review"} ],
+  "学院一楼花园中庭":[ {s:1,e:4,st:"booked"}, {s:33,e:38,st:"booked"} ]
+};
+
+/* ---------- 日期工具 ---------- */
+const TODAY = (()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; })();
+const DAYMS = 86400000;
+function addDays(base, n){ const d=new Date(base); d.setDate(d.getDate()+n); d.setHours(0,0,0,0); return d; }
+function key(d){ return d.getFullYear()*10000 + (d.getMonth()+1)*100 + d.getDate(); }
+function fmtCN(d){ return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; }
+function fmtShort(d){ return `${d.getMonth()+1}月${d.getDate()}日`; }
+function inclusiveDays(a,b){ return Math.round((key2date(key(b))-key2date(key(a)))/DAYMS)+1; }
+function key2date(k){ const y=Math.floor(k/10000), m=Math.floor(k/100)%100, dd=k%100; return new Date(y,m-1,dd).getTime(); }
+
+/* 计算某天在当前场地的状态 */
+function statusOf(d){
+  if(key(d) < key(TODAY)) return "past";
+  const ranges = MOCK[STATE.venue] || [];
+  for(const r of ranges){
+    const rs=key(addDays(TODAY,r.s)), re=key(addDays(TODAY,r.e));
+    if(key(d)>=rs && key(d)<=re) return r.st;
+  }
+  return "free";
+}
+
+/* ---------- 应用状态 ---------- */
+const STATE = { venue:null, start:null, end:null };
+
+/* ---------- 渲染：场地卡 ---------- */
+function renderVenues(){
+  const g = document.getElementById("venueGrid");
+  g.innerHTML = "";
+  CONFIG.venues.forEach(v=>{
+    const url = CONFIG.venueImages[v];
+    const photo = url
+      ? `<img src="${url}" alt="${v}">`
+      : `<div class="ph">${v}<br>（照片待上传）</div>`;
+    const card = document.createElement("button");
+    card.className = "vcard";
+    card.innerHTML = `<div class="vphoto">${photo}</div>
+      <div class="vbody"><div class="vname">${v}</div>
+      <div class="vhint">${CONFIG.venueHints[v]||""}</div></div>`;
+    card.onclick = ()=>pickVenue(v);
+    g.appendChild(card);
+  });
+}
+
+/* ---------- 渲染：三个月日历 ---------- */
+const WD = ["日","一","二","三","四","五","六"];
+function renderCalendars(){
+  const host = document.getElementById("cals");
+  host.innerHTML = "";
+  for(let m=0;m<3;m++){
+    const first = new Date(TODAY.getFullYear(), TODAY.getMonth()+m, 1);
+    const y=first.getFullYear(), mo=first.getMonth();
+    const daysInMonth = new Date(y, mo+1, 0).getDate();
+    const startWd = first.getDay(); // 0=周日
+    let cells = "";
+    WD.forEach(w=> cells += `<div class="wd">${w}</div>`);
+    for(let i=0;i<startWd;i++) cells += `<div class="day pad"></div>`;
+    for(let dnum=1; dnum<=daysInMonth; dnum++){
+      const d = new Date(y, mo, dnum);
+      const st = statusOf(d);
+      cells += `<div class="day ${st}" data-key="${key(d)}" ${st==="free"?'tabindex="0"':""}>${dnum}</div>`;
+    }
+    host.innerHTML += `<div class="cal"><h3>${y}年${mo+1}月</h3><div class="grid">${cells}</div></div>`;
+  }
+  // 绑定点击
+  host.querySelectorAll(".day").forEach(el=>{
+    if(el.classList.contains("pad")) return;
+    el.addEventListener("click", ()=>onDayClick(el));
+    el.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();onDayClick(el);} });
+  });
+  paintSelection();
+}
+
+/* ---------- 选择逻辑 ---------- */
+function onDayClick(el){
+  const k = +el.dataset.key;
+  const d = new Date(key2date(k));
+  const st = statusOf(d);
+  if(st==="past") return;
+  if(st==="booked"){ openModal("booked"); return; }
+  if(st==="review"){ openModal("review"); return; }
+  // free
+  if(!STATE.start || (STATE.start && STATE.end)){
+    STATE.start = d; STATE.end = null;          // 开始新选择
+  } else {
+    if(key(d) < key(STATE.start)){ STATE.start = d; STATE.end = null; }
+    else if(key(d)===key(STATE.start)){ STATE.end = d; }   // 单日展
+    else {
+      // 校验 start..d 整段是否干净
+      const bad = scanRange(STATE.start, d);
+      if(bad){ openModal(bad.type, bad.date); STATE.start=null; STATE.end=null; paintSelection(); updateReadout(); return; }
+      STATE.end = d;
+    }
+  }
+  paintSelection(); updateReadout();
+}
+
+function scanRange(a,b){
+  let cur = new Date(a);
+  while(key(cur) <= key(b)){
+    const s = statusOf(cur);
+    if(s==="booked") return {type:"booked", date:new Date(cur)};
+    if(s==="review") return {type:"review", date:new Date(cur)};
+    cur = addDays(cur,1);
+  }
+  return null;
+}
+
+function paintSelection(){
+  document.querySelectorAll("#cals .day").forEach(el=>{
+    el.classList.remove("sel-edge","sel-mid");
+    if(el.classList.contains("pad")) return;
+    const k=+el.dataset.key;
+    if(STATE.start && !STATE.end && k===key(STATE.start)) el.classList.add("sel-edge");
+    if(STATE.start && STATE.end){
+      const ks=key(STATE.start), ke=key(STATE.end);
+      if(k===ks||k===ke) el.classList.add("sel-edge");
+      else if(k>ks && k<ke) el.classList.add("sel-mid");
+    }
+  });
+}
+
+function updateReadout(){
+  const rt=document.getElementById("rangeText"), dt=document.getElementById("daysText"),
+        flag=document.getElementById("routeFlag"), toForm=document.getElementById("toFormBtn"),
+        reset=document.getElementById("resetBtn");
+  if(STATE.start && STATE.end){
+    rt.textContent = `${fmtCN(STATE.start)} 至 ${fmtCN(STATE.end)}`;
+    const n = inclusiveDays(STATE.start, STATE.end);
+    dt.textContent = `共 ${n} 天`;
+    if(n <= CONFIG.autoApproveMaxDays){ flag.innerHTML = `<span class="flag auto">可自助确认</span>`; }
+    else { flag.innerHTML = `<span class="flag manual">超过 ${CONFIG.autoApproveMaxDays} 天 · 需人工审核</span>`; }
+    toForm.disabled=false; reset.disabled=false;
+  } else if(STATE.start && !STATE.end){
+    rt.textContent = `${fmtCN(STATE.start)} 起 —— 请再点结束日`;
+    dt.textContent=""; flag.innerHTML=""; toForm.disabled=true; reset.disabled=false;
+  } else {
+    rt.textContent="尚未选择"; dt.textContent=""; flag.innerHTML=""; toForm.disabled=true; reset.disabled=true;
+  }
+}
+
+function resetRange(){ STATE.start=null; STATE.end=null; paintSelection(); updateReadout(); }
+
+/* ---------- 弹窗 ---------- */
+function openModal(type, date){
+  const box=document.getElementById("modalBox"), ic=document.getElementById("mIc"),
+        t=document.getElementById("mTitle"), p=document.getElementById("mText");
+  box.className = "modal "+type;
+  if(type==="booked"){
+    ic.textContent="✕"; t.textContent="该时段已被预约";
+    p.textContent = date ? `含已被占用的 ${fmtShort(date)}，请另选其他绿色日期。` : "请另选其他绿色日期。";
+  } else {
+    ic.textContent="⏳"; t.textContent="该档期正在审核中";
+    p.textContent = "建议 24 小时后再来查看该档期是否可约。";
+  }
+  document.getElementById("backdrop").classList.add("on");
+}
+function closeModal(e){
+  if(e && e.target && e.target.id!=="backdrop" && !e.target.closest(".modal") ) {}
+  if(e && e.type==="click" && e.target.id!=="backdrop" && e.target.tagName!=="BUTTON") return;
+  document.getElementById("backdrop").classList.remove("on");
+}
+
+/* ---------- 屏幕切换 ---------- */
+function show(step){
+  for(let i=1;i<=4;i++) document.getElementById("s"+i).classList.toggle("on", i===step);
+  document.querySelectorAll("#stepper .step").forEach(el=>{
+    const n=+el.dataset.step;
+    el.classList.toggle("active", n===step);
+    el.classList.toggle("done", n<step);
+  });
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function pickVenue(v){
+  STATE.venue=v; STATE.start=null; STATE.end=null;
+  document.getElementById("calVenueName").textContent=v;
+  const thumb=document.getElementById("calThumb"), url=CONFIG.venueImages[v];
+  thumb.innerHTML = url ? `<img src="${url}" alt="${v}">` : "照片";
+  renderCalendars(); updateReadout(); show(2);
+}
+function goVenue(){ show(1); }
+function goForm(){
+  document.getElementById("initBar").innerHTML =
+    `已初步选定 <b>${fmtCN(STATE.start)} 至 ${fmtCN(STATE.end)}</b> · <b>${STATE.venue}</b> 的使用，请进一步完善联系人信息。`;
+  show(3);
+}
+
+/* ---------- 表单校验 ---------- */
+function submitForm(){
+  const checks = [
+    ["f_title","i_title", v=>v.trim().length>0],
+    ["f_class","i_class", v=>v.trim().length>0],
+    ["f_teacher","i_teacher", v=>v.trim().length>0],
+    ["f_name","i_name", v=>v.trim().length>0],
+    ["f_phone","i_phone", v=>/^[0-9][0-9\-\s]{6,}$/.test(v.trim())],
+    ["f_email","i_email", v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())],
+  ];
+  let ok=true, firstBad=null;
+  checks.forEach(([fid,iid,test])=>{
+    const val=document.getElementById(iid).value;
+    const good=test(val);
+    document.getElementById(fid).classList.toggle("bad", !good);
+    if(!good && !firstBad){ firstBad=document.getElementById(iid); ok=false; }
+    if(!good) ok=false;
+  });
+  if(!ok){ if(firstBad) firstBad.focus(); return; }
+  buildConfirmation();
+  show(4);
+}
+
+/* ---------- 生成确认页（展签） ---------- */
+function buildConfirmation(){
+  const n = inclusiveDays(STATE.start, STATE.end);
+  const isAuto = n <= CONFIG.autoApproveMaxDays;
+  const data = {
+    展览名称: document.getElementById("i_title").value.trim(),
+    班级: document.getElementById("i_class").value.trim(),
+    指导教师: document.getElementById("i_teacher").value.trim(),
+    联系人: document.getElementById("i_name").value.trim(),
+    电话: document.getElementById("i_phone").value.trim(),
+    邮箱: document.getElementById("i_email").value.trim(),
+  };
+  const st=document.getElementById("cStatus"), ic=document.getElementById("cIc"),
+        title=document.getElementById("cTitle"), msg=document.getElementById("cMsg");
+  if(isAuto){
+    st.className="status ok"; ic.textContent="✓"; title.textContent="预约成功";
+    msg.textContent="档期已为你锁定。请核对下方信息，并按提示准备展览海报。";
+  } else {
+    st.className="status wait"; ic.textContent="⏳"; title.textContent="已提交，人工审核中";
+    msg.textContent=`因展期跨度超过 ${CONFIG.autoApproveMaxDays} 天，正在人工审核，结果将通过邮件通知你。审核期间该档期已为你暂时保留。`;
+  }
+  // 信息核对
+  const kv=document.getElementById("cKv");
+  kv.innerHTML = `
+    <dt>场地</dt><dd class="big">${STATE.venue}</dd>
+    <dt>展期</dt><dd class="big">${fmtShort(STATE.start)} — ${fmtShort(STATE.end)}（共 ${n} 天）</dd>
+    <dt>布展 / 撤展</dt><dd>${fmtCN(STATE.start)} 布展 · ${fmtCN(STATE.end)} 撤展</dd>
+    <dt>展览名称</dt><dd>${data.展览名称}</dd>
+    <dt>班级</dt><dd>${data.班级}</dd>
+    <dt>指导教师</dt><dd>${data.指导教师}</dd>
+    <dt>联系人</dt><dd>${data.联系人} · ${data.电话}</dd>
+    <dt>邮箱</dt><dd>${data.邮箱}</dd>`;
+  // 海报块：成功才显示
+  const poster=document.getElementById("cPoster");
+  if(isAuto){
+    poster.classList.remove("hidden");
+    document.getElementById("p_size").textContent=CONFIG.poster.size;
+    document.getElementById("p_dpi").textContent=CONFIG.poster.dpi;
+    document.getElementById("p_fmt").textContent=CONFIG.poster.format;
+    document.getElementById("p_max").textContent=CONFIG.poster.maxSize;
+    document.getElementById("p_email").textContent=CONFIG.poster.email;
+  } else {
+    poster.classList.add("hidden");
+  }
+}
+
+function restart(){
+  STATE.venue=null; STATE.start=null; STATE.end=null;
+  ["i_title","i_class","i_teacher","i_name","i_phone","i_email"].forEach(id=>document.getElementById(id).value="");
+  document.querySelectorAll(".field").forEach(f=>f.classList.remove("bad"));
+  show(1);
+}
+
+/* ---------- 启动 ---------- */
+renderVenues();
+show(1);
+</script>
+</body>
+</html>
