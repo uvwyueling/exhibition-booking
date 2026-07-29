@@ -1,0 +1,13 @@
+{
+  "name": "scf-email-notifier",
+  "version": "1.0.0",
+  "description": "腾讯云 SCF 定时函数：扫飞书表里状态=已确认且未发邮件的记录，用浙大 SMTP 发通知给班长，回写标记。",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.14",
+    "pdfkit": "^0.19.1"
+  }
+}
