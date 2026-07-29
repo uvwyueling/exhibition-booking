@@ -1,7 +1,7 @@
 {
   "name": "scf-email-notifier",
   "version": "1.0.0",
-  "description": "腾讯云 SCF 定时函数：扫飞书表里状态=已确认且未发邮件的记录，用浙大 SMTP 发通知给班长，回写标记。",
+  "description": "腾讯云 SCF 定时函数：扫飞书表里状态=已确认且未发邮件的记录，用网易企业邮 SMTP 发确认信（附填好的《布展申请表》PDF）给班长，回写标记。",
   "main": "index.js",
   "engines": {
     "node": ">=18"

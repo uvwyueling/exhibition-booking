@@ -105,7 +105,13 @@ function renderPdf(rec) {
     // Row E: 指导教师意见 | 大空框(5)
     const boxH = 120;
     cell(L, col, boxH, "", { fill: true });
-    doc.fontSize(F).fillColor("#000").text("指导\n教师\n意见", L + 4, y + boxH / 2 - 24, { width: col - 8, align: "center" });
+    // 三行各自独立居中，避免 pdfkit 多行居中最后一行错位
+    const labelLines = ["指导", "教师", "意见"];
+    const llH = F + 5;
+    const llStart = y + boxH / 2 - (llH * labelLines.length) / 2 + 2;
+    labelLines.forEach((ln, i) => {
+      doc.fontSize(F).fillColor("#000").text(ln, L + 4, llStart + i * llH, { width: col - 8, align: "center", lineBreak: false });
+    });
     cell(L + col, col * 5, boxH, "");
     doc.fontSize(F).text("签名：", L + col * 5, y + boxH - 42, { width: col - 8, align: "left" });
     doc.text("年      月      日", L + col + 8, y + boxH - 22, { align: "right", width: col * 5 - 16 });
