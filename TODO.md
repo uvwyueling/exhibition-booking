@@ -24,7 +24,7 @@
 ## B. 待确认 / 待提供
 
 - [ ] **正式域名 / 公开访问**（已调研，暂缓）— 现用 `exhibition-booking-pcq5q5gf.edgeone.cool` 是**受保护的预览链接**：匿名访问返回 401（`eo_time missing`，腾讯 EdgeOne 拦截页），控制台未找到可关闭的鉴权开关，**不能直接发给学生**。EdgeOne 已不再发放免费默认域名（客服确认）。Vercel+Cloudflare 内地不通，排除。**结论**：内地要稳定公开访问，需自备域名（约 30 元/年）+ **免费** ICP 备案（约 1–2 周）→ 绑 EdgeOne 开国内加速。**已决定：先打磨产品，域名/上线这步暂缓。**
-- [ ] **两张场地照片** — 有图后把 URL 填进 `index.html` 顶部的 `CONFIG.venueImages`（当前为占位框）。
+- [x] **场地照片** — 四张照片（展厅 / 15号楼 / 16号楼 / 花园中庭）已放入 `img/` 并填进 `CONFIG.venueImages`。顺带修了 `.vphoto img` 裁切 bug（加 `position:absolute;inset:0`，让横竖不同比例的照片统一裁成 16:10，卡片高度一致）。
 
 ## C. 打磨（可选）
 

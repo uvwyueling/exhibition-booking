@@ -60,7 +60,7 @@
   .vcard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .vphoto{aspect-ratio:16/10;background:#EDEEE9;display:grid;place-items:center;
     border-bottom:1px solid var(--line);position:relative}
-  .vphoto img{width:100%;height:100%;object-fit:cover;display:block}
+  .vphoto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
   .vphoto .ph{font-family:var(--mono);font-size:11px;color:var(--faint);text-align:center;padding:0 14px;line-height:1.7}
   .vbody{padding:14px 16px 16px}
   .vname{font-family:var(--serif);font-size:19px;font-weight:600}
@@ -346,12 +346,12 @@ const CONFIG = {
     "16号楼一楼走廊": "16 号楼一楼走廊",
     "学院一楼花园中庭": "学院一楼花园中庭，开放式空间"
   },
-  // 两张图：展厅一张；三处走廊/中庭共用一张“圈注图”。拍好后把 URL 填进来即可。
+  // 场地照片：留空则显示“照片待上传”占位框。
   venueImages: {
-    "展厅": "",                    // ← 展厅照片 URL
-    "15号楼一楼走廊": "",           // ← 三处共用的“圈注图”URL（下同）
-    "16号楼一楼走廊": "",
-    "学院一楼花园中庭": ""
+    "展厅": "img/展厅.jpg",
+    "15号楼一楼走廊": "img/15号楼一楼走廊.jpg",
+    "16号楼一楼走廊": "img/16号楼一楼走廊.jpg",
+    "学院一楼花园中庭": "img/花园中庭.jpg"
   },
   // 海报导出要求 + 收件邮箱 —— 待你确认后替换（现在是占位）
   poster: {
