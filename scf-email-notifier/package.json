@@ -1,7 +1,7 @@
 {
   "name": "scf-email-notifier",
   "version": "1.0.0",
-  "description": "腾讯云 SCF 邮件函数（网易企业邮 SMTP + 飞书多维表格）。两个入口同一份代码：index.main_handler（每 5 分钟：确认信附《布展申请表》PDF + 驳回重约信）、daily.main_handler（每天 9 点：布展前三天《登记表》提醒附 PDF）。均回写幂等标记。",
+  "description": "腾讯云 SCF 定时函数（每 5 分钟，网易企业邮 SMTP + 飞书多维表格）：① 状态=已确认 → 发确认信附《布展申请表》PDF；② 状态=已驳回 → 发重约信。均回写幂等标记给班长。",
   "main": "index.js",
   "engines": {
     "node": ">=18"
