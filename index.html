@@ -201,8 +201,8 @@
 
   <!-- ========== 1 选场地 ========== -->
   <section class="screen" id="s1">
-    <div class="lead">你想在哪个场地办展览？</div>
-    <div class="sub">四个场地各自独立预约。走廊两处和中庭离得很近，看同一张标注图别选错了。</div>
+    <div class="lead">想在哪个场地办展览？</div>
+    <div class="sub">四个场地各自独立预约。</div>
     <div class="venues" id="venueGrid"></div>
   </section>
 
@@ -217,7 +217,7 @@
       <div style="margin-left:auto"><button class="btn ghost small" onclick="goVenue()">换场地</button></div>
     </div>
 
-    <div class="note">建议单次展期在一周左右，请勿长期占用场地。第一天默认为布展日、最后一天为撤展日；需要留空隙，自己在日历上空出即可。</div>
+    <div class="note">建议单次展期在一周左右，请勿长期占用场地。第一天默认为布展日、最后一天为撤展日。</div>
 
     <div class="legend">
       <span><i class="dot free"></i>可约</span>
@@ -256,17 +256,17 @@
       <div class="grid2">
         <div class="field" id="f_class">
           <label>班级 <span class="req">*</span></label>
-          <input id="i_class" type="text" placeholder="例：视觉2201" autocomplete="off">
+          <input id="i_class" type="text" placeholder="例：视觉传达设计20240623" autocomplete="off">
           <div class="err">请填写班级</div>
         </div>
         <div class="field" id="f_teacher">
           <label>指导教师 <span class="req">*</span></label>
-          <input id="i_teacher" type="text" placeholder="例：张老师" autocomplete="off">
+          <input id="i_teacher" type="text" placeholder="例：陈茂流老师" autocomplete="off">
           <div class="err">请填写指导教师</div>
         </div>
         <div class="field" id="f_name">
           <label>联系人姓名 <span class="req">*</span></label>
-          <input id="i_name" type="text" placeholder="通常是班长" autocomplete="off">
+          <input id="i_name" type="text" placeholder="你的姓名" autocomplete="off">
           <div class="err">请填写联系人姓名</div>
         </div>
         <div class="field" id="f_phone">
@@ -341,9 +341,9 @@ const CONFIG = {
   autoApproveMaxDays: 10,          // ≤ 此天数自助确认；> 此天数转人工审核
   venues: ["展厅", "15号楼一楼走廊", "16号楼一楼走廊", "学院一楼花园中庭"],
   venueHints: {
-    "展厅": "学院大展厅，空间最大",
-    "15号楼一楼走廊": "15 号楼一楼走廊",
-    "16号楼一楼走廊": "16 号楼一楼走廊",
+    "展厅": "矩形的独立展览空间，配备专业照明设备",
+    "15号楼一楼走廊": "南面教学楼是15号楼",
+    "16号楼一楼走廊": "北面教学楼是16号楼",
     "学院一楼花园中庭": "学院一楼花园中庭，开放式空间"
   },
   // 场地照片：留空则显示“照片待上传”占位框。
