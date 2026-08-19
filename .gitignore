@@ -3,3 +3,6 @@
 
 node_modules
 .DS_Store
+
+# 本地静态服务器配置（python3 -m http.server 4173）与项目逻辑无关
+.claude/launch.json

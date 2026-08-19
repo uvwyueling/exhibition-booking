@@ -1,5 +1,8 @@
 {
   "name": "exhibition-booking",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "build:demo": "sh scripts/build-demo.sh"
+  }
 }

@@ -18,6 +18,10 @@
   - Vercel 环境变量填飞书四项；同源 `/api` 免跨域
   - 已绑定域名 **`www.ysxy-exhibition.cloud`**（腾讯云买、DNSPod 解析、Vercel 自动签发 HTTPS）；**免备案**（走 Vercel 境外节点，内地能访问、稍慢——这是不备案的取舍）
   - 线上可公开访问（前端 + `/api` 均 200）
+- **演示版 `/demo/`** ✅（本轮完成）— 给作品集/简历用的地址，走内置 MOCK，不碰飞书、不发邮件
+  - 只有一份代码：`index.html` 的 `DEMO_MODE` 按 `location.pathname` 判断，`demo/index.html` 是逐字节副本
+  - ⚠️ **改完 `index.html` 要跑 `npm run build:demo` 再提交**，否则演示版停在旧版本
+  - MOCK 档期已重排成「三色同屏 + 审核中段一律 >10 天」；演示模式下加提示条、改标题、隐去展厅管理邮箱
 
 ---
 
